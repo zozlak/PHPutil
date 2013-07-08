@@ -1,4 +1,6 @@
 <?php
+# aby wykonać testy należy wejść do katalogu wyższego poziomu i wykonać "phpunit testy"
+
 	require_once('PasekPostepu.php');
 
 	class PasekPostepuTest extends PHPUnit_Framework_TestCase {
