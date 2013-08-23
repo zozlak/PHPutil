@@ -14,8 +14,10 @@
 		}
 		
 		protected function setUp(){
-			self::$polaczenie->exec("DROP TABLE IF EXISTS aaa;");
+			self::$polaczenie->exec("DROP TABLE IF EXISTS bbb");
+			self::$polaczenie->exec("DROP TABLE IF EXISTS aaa");
 			self::$polaczenie->exec("CREATE TABLE aaa (a int primary key, b text, c bool)");
+			self::$polaczenie->exec("CREATE TABLE bbb (a int references aaa(a), b text, c bool, primary key(a, b))");
 		}
 
 		public static function tearDownAfterClass(){
@@ -143,6 +145,40 @@
 
 			$tmp->wstawWiersz(array(1, '', 'Nie'));
 			$tmp->zakoncz();
+		}
+
+		/**
+		* @depends testKopiujTablice
+		*/
+		public function testSzybkosc(){
+			$t = microtime(true);
+			$tmp1 = new SQLCopy('user=zozlak dbname=test', 'aaa');
+			for($i=0; $i<1000000; $i++)
+				$tmp1->wstawWiersz(array($i, 'a', null));
+			$tmp1->zakoncz();
+			echo((microtime(true)-$t)."\n");
+		}
+
+		/**
+		* @depends testKopiujTablice
+		*/
+		public function testKopiujRownolegle(){
+			$tmp1 = new SQLCopy('user=zozlak dbname=test', 'aaa');
+			$tmp2 = new SQLCopy('user=zozlak dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
+
+			for($i=0; $i<100; $i++)
+				$tmp1->wstawWiersz(array($i, 'a', null));
+			for($i=0; $i<100; $i++){
+				$tmp2->wstawWiersz(array($i, 'a', null));
+				$tmp2->wstawWiersz(array($i, 'b', null));
+			}
+			$tmp1->zakoncz();
+			$tmp2->zakoncz();
+			
+			$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa ');
+			$this->assertEquals(100, $tmp->fetchColumn());
+			$tmp=self::$polaczenie->query('SELECT count(*) FROM bbb');
+			$this->assertEquals(200, $tmp->fetchColumn());
 		}
 	}	
 ?>

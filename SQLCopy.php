@@ -9,11 +9,11 @@
 		private $polaczenie;
 		private $opcje = array('null'=>array(), 'false'=>array(false), 'true'=>array(true));
 
-//null='', 'NA', null
-//false='nie', 'N', false
-//true='tak', 'T', true
 		public function __construct($danePolaczenia, $tablica, array $opcje = array()){
-			$this->polaczenie = @pg_pconnect($danePolaczenia, PGSQL_CONNECT_FORCE_NEW);
+			$danePolaczenia=str_replace('pgsql:', '', $danePolaczenia); // pozbaw ew. dane w formacie PDO przedrostka typu bazy
+			// pg_pconnect() nie przyspiesza operacji (najwyraźniej COPY i tak trzyma otwarte połączenie), 
+			// natomiast uniemożliwia równoległe kopiowanie kilku tablic - stąd połącz za pomocą zwykłego pg_connect()
+			$this->polaczenie = @pg_connect($danePolaczenia, PGSQL_CONNECT_FORCE_NEW);
 			if($this->polaczenie === false)
 				throw new SQLCopyException('Nie udało się połączyć z bazą danych ('.$danePolaczenia.')');
 			pg_query("COPY ".pg_escape_identifier($this->polaczenie, $tablica)." FROM stdin");
@@ -35,10 +35,12 @@
 		}
 		
 		public function zakoncz(){
-			pg_put_line($this->polaczenie, "\\.\n");
-			pg_end_copy($this->polaczenie);
-			pg_close($this->polaczenie);
-			$this->polaczenie = null;
+			if($this->polaczenie){
+				pg_put_line($this->polaczenie, "\\.\n");
+				pg_end_copy($this->polaczenie);
+				pg_close($this->polaczenie);
+				$this->polaczenie = null;
+			}
 		}
 		
 		private function wyparsuj(array &$wiersz){
