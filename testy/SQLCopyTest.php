@@ -135,16 +135,20 @@
 		}
 
 		/**
-		* @expectedException PHPUnit_Framework_Error
 		* @depends testKopiujNietypoweTablice
 		* @covers SQLCopy::wstawWiersz
 		* @covers SQLCopy::wyparsuj
 		*/
 		public function testKopiujNietypoweTabliceBledy(){
 			$tmp = new SQLCopy('user=zozlak dbname=test', 'aaa');
-
 			$tmp->wstawWiersz(array(1, '', 'Nie'));
-			$tmp->zakoncz();
+			try{
+				$tmp->zakoncz();
+				throw new Exception('Brak wyjątku');
+			}
+			catch(SQLCopyException $e){
+				$this->assertEquals($e->getCode(), SQLCopyException::BLAD_KONCZENIA);
+			}
 		}
 
 		/**

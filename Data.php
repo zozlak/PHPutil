@@ -12,10 +12,14 @@
 		static $korektaSPSS=12219379200; // różnica pomiędzy 1970-01-01, a 1582-10-14, czyli pomiędzy początkiem świata wg UNIX-a i wg R-a (przy wczytywaniu dat z SPSS-a)
 
 		static public function zwrDate($data, $eraSPSS = true){
+			$data = trim($data);
+			if($data == '')
+				return null;
+		
 			if(is_numeric($data))
 				return date('Y-m-d', intval($data) - ($eraSPSS === true ? self::$korektaSPSS : 0));
 			
-			$data = preg_split('/[^0-9]/', trim($data));
+			$data = preg_split('/[^0-9]/', $data);
 			if(count($data) != 3)
 				return null;
 			foreach($data as $i){
