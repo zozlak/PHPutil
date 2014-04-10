@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright 2012-2013 Mateusz Żółtak
+	Copyright 2012-2014 Mateusz Żółtak
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -44,11 +44,13 @@
 		private $kodowanie;
 		
 		public function __construct($nazwaPliku, $separator=',', $tekst='"', $ucieczka='"', $kodowanie=null){
-			if(!is_file($nazwaPliku))
+			if(!is_file($nazwaPliku)){
 				throw new PlikCSVException('"'.$nazwaPliku.'" nie jest plikiem', PlikCSVException::BRAK_PLIKU);
+			}
 			$this->uchwyt = @fopen($nazwaPliku, 'r');
-			if($this->uchwyt === false)
+			if($this->uchwyt === false){
 				throw new PlikCSVException('Nie udało się otworzyć pliku "'.$nazwaPliku.'"', PlikCSVException::BLAD_OTWARCIA_PLIKU);
+			}
 			$this->separator = $separator;
 			$this->tekst = $tekst;
 			$this->ucieczka = $ucieczka;
@@ -57,12 +59,15 @@
 		
 		public function wczytajNaglowek($trim=false){
 			$this->naglowek = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-			if($this->naglowek === false)
+			if($this->naglowek === false){
 				throw new PlikCSVException('Nie udało się wczytać nagłówka', PlikCSVException::BLAD_WCZYTANIA_NAGLOWKA);
-			if($trim)
+			}
+			if($trim){
 				$this->przytnij($this->naglowek);
-			if($this->kodowanie !== null)
+			}
+			if($this->kodowanie !== null){
 				$this->konwertuj($this->naglowek);
+			}
 			return $this->naglowek;
 		}
 		public function zwrNaglowek(){
@@ -78,13 +83,16 @@
 		public function zwrLinie($trim=false, $minKolumn=null){
 			do{
 				$l = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-				if($l === false)
+				if($l === false){
 					return false;
+				}
 			}while($minKolumn > 0 && count($l) < $minKolumn);
-			if($trim)
+			if($trim){
 				$this->przytnij($l);
-			if($this->kodowanie !== null)
+			}
+			if($this->kodowanie !== null){
 				$this->konwertuj($l);
+			}
 			return $l;
 		}
 		
