@@ -9,7 +9,7 @@
 		private $polaczenie;
 		private $opcje = array('null'=>array(), 'false'=>array(false), 'true'=>array(true));
 
-		public function __construct($danePolaczenia, $tablica, array $opcje = array()){
+		public function __construct($danePolaczenia, $tablica, array $opcje = array(), $schema = 'public'){
 			foreach($opcje as $h=>$i){
 				if(!isset($this->opcje[$h])){
 					throw new SQLCopyException('Niewłaściwa opcja. Dostępne opcje: '.implode(', ', array_keys($this->opcje)), SQLCopyException::NIEWLASCIWA_OPCJA);
@@ -27,7 +27,9 @@
 			if($this->polaczenie === false){
 				throw new SQLCopyException('Nie udało się połączyć z bazą danych ('.$danePolaczenia.')', SQLCopyException::BLAD_POLACZENIA);
 			}
-			$wynik = @pg_query("COPY ".pg_escape_identifier($this->polaczenie, $tablica)." FROM stdin");
+			$schema = pg_escape_identifier($this->polaczenie, $schema);
+			$tablica = pg_escape_identifier($this->polaczenie, $tablica);
+			$wynik = @pg_query("COPY ".$schema.".".$tablica." FROM stdin");
 			if($wynik === false){
 				throw new SQLCopyException('Nie udało się wykonać polecenia COPY', SQLCopyException::BLAD_ROZPOCZECIA);
 			}

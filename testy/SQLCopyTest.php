@@ -7,9 +7,11 @@
 		static private $polaczenie;
 	
 		static public function setUpBeforeClass() {
-			exec('dropdb -U postgres test;
-					createdb -U postgres -O zozlak test;');
-			self::$polaczenie = new PDO('pgsql:user=zozlak dbname=test');
+			exec('
+				dropdb test;
+				createdb test;
+			');
+			self::$polaczenie = new PDO('pgsql:dbname=test');
 			self::$polaczenie->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		}
 		
@@ -21,6 +23,8 @@
 		}
 
 		public static function tearDownAfterClass(){
+			self::$polaczenie = null;
+			exec('dropdb test');
 		}
 
 		/**
@@ -28,7 +32,7 @@
 		* @covers SQLCopy::__construct
 		*/
 		public function testConstruct(){
-			$tmp = new SQLCopy('user=zozlak dbname=test', 'aaa');
+			$tmp = new SQLCopy('dbname=test', 'aaa');
 			$tmp->zakoncz();
 			$tmp = new SQLCopy('user=zozlak dbname=bazaKtoraNieIstnieje', 'aaa');
 		}
@@ -39,7 +43,7 @@
 		* @covers SQLCopy::wstawWiersz
 		*/
 		public function testZakoncz(){
-			$tmp = new SQLCopy('user=zozlak dbname=test', 'aaa');
+			$tmp = new SQLCopy('dbname=test', 'aaa');
 			$tmp->zakoncz();
 			$tmp->wstawWiersz("1\t\N\t\N\n");
 		}
@@ -48,7 +52,7 @@
 		* @covers SQLCopy::wstawWiersz
 		*/
 		public function testKopiujStringi(){
-			$tmp = new SQLCopy('user=zozlak dbname=test', 'aaa');
+			$tmp = new SQLCopy('dbname=test', 'aaa');
 
 			for($i=0; $i<100; $i++)
 				$tmp->wstawWiersz($i."\t\N\t\N\n");
@@ -78,7 +82,7 @@
 		* @covers SQLCopy::wyparsuj
 		*/
 		public function testKopiujTablice(){
-			$tmp = new SQLCopy('user=zozlak dbname=test', 'aaa');
+			$tmp = new SQLCopy('dbname=test', 'aaa');
 
 			for($i=0; $i<100; $i++)
 				$tmp->wstawWiersz(array($i, null, null));
@@ -108,7 +112,7 @@
 		* @covers SQLCopy::wyparsuj
 		*/
 		public function testKopiujNietypoweTablice(){
-			$tmp = new SQLCopy('user=zozlak dbname=test', 'aaa', array('null'=>array('', 'NA'), 'true'=>array('T', 'true')));
+			$tmp = new SQLCopy('dbname=test', 'aaa', array('null'=>array('', 'NA'), 'true'=>array('T', 'true')));
 
 			for($i=0; $i<100; $i++)
 				$tmp->wstawWiersz(array($i, 'NA', null));
@@ -140,7 +144,7 @@
 		* @covers SQLCopy::wyparsuj
 		*/
 		public function testKopiujNietypoweTabliceBledy(){
-			$tmp = new SQLCopy('user=zozlak dbname=test', 'aaa');
+			$tmp = new SQLCopy('dbname=test', 'aaa');
 			$tmp->wstawWiersz(array(1, '', 'Nie'));
 			try{
 				$tmp->zakoncz();
@@ -156,8 +160,8 @@
 		*/
 		public function testSzybkosc(){
 			$t = microtime(true);
-			$tmp1 = new SQLCopy('user=zozlak dbname=test', 'aaa');
-			for($i=0; $i<1000000; $i++)
+			$tmp1 = new SQLCopy('dbname=test', 'aaa');
+			for($i=0; $i < 1000000; $i++)
 				$tmp1->wstawWiersz(array($i, 'a', null));
 			$tmp1->zakoncz();
 			echo((microtime(true)-$t)."\n");
@@ -167,8 +171,8 @@
 		* @depends testKopiujTablice
 		*/
 		public function testKopiujRownolegle(){
-			$tmp1 = new SQLCopy('user=zozlak dbname=test', 'aaa');
-			$tmp2 = new SQLCopy('user=zozlak dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
+			$tmp1 = new SQLCopy('dbname=test', 'aaa');
+			$tmp2 = new SQLCopy('dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
 
 			for($i=0; $i<100; $i++)
 				$tmp1->wstawWiersz(array($i, 'a', null));
@@ -183,6 +187,18 @@
 			$this->assertEquals(100, $tmp->fetchColumn());
 			$tmp=self::$polaczenie->query('SELECT count(*) FROM bbb');
 			$this->assertEquals(200, $tmp->fetchColumn());
+		}
+
+		/**
+		* @depends testKopiujTablice
+		*/
+		public function testKopiujWSchemie(){
+			self::$polaczenie->exec("CREATE SCHEMA s");
+			self::$polaczenie->exec("CREATE TABLE s.aaa (a int primary key, b text, c bool)");
+			$tmp1 = new SQLCopy('dbname=test', 'aaa', array(), 's');
+			for($i=0; $i < 100; $i++)
+				$tmp1->wstawWiersz(array($i, 'a', null));
+			$tmp1->zakoncz();
 		}
 	}	
 ?>

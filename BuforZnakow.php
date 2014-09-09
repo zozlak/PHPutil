@@ -26,26 +26,32 @@
 	 
 	 class BuforZnakow {
 	 	private $bufor;
-	 	private $offset=0;
+	 	private $offset = 0;
 	 	private $dl;
 	 	
 	 	public function __construct($string){
-	 		$this->bufor=$string;
-	 		$this->dl=mb_strlen($this->bufor);
+	 		$this->bufor = $string;
+	 		$this->dl = mb_strlen($this->bufor);
 	 	}
 	 	
 	 	public function zwrString($pozycja, $lZnakow=1){
-	 		if($pozycja >= $this->dl)
+	 		if($pozycja >= $this->dl){
 	 			throw new Exception('Pozycja poza stringiem');
-	 		else if($pozycja < $this->offset)
+	 		}
+	 		else if($pozycja < $this->offset){
 	 			throw new Exception('Pozycja przed offsetem');
+	 		}
 	 		return mb_substr($this->bufor, $pozycja-$this->offset, $lZnakow);
 	 	}
 	 	
+	 	/*
+	 	 * Skracamy tylko na wyraźne życzenie, bo klasa nie wie sama z siebie,
+	 	 * kiedy już przetworzona część stringu faktycznie przestaje być potrzebna
+	 	 */
 	 	public function skroc($pozycja, $minRoznica=1000){
 	 		if($pozycja >= $this->offset+$minRoznica){
-	 			$this->bufor=mb_substr($this->bufor, $pozycja-$this->offset);
-	 			$this->offset=$pozycja;
+	 			$this->bufor = mb_substr($this->bufor, $pozycja-$this->offset);
+	 			$this->offset = $pozycja;
 	 		}
 	 	}
 	 	
