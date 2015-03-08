@@ -31,7 +31,7 @@
 			$tablica = pg_escape_identifier($this->polaczenie, $tablica);
 			$wynik = @pg_query("COPY ".$schema.".".$tablica." FROM stdin");
 			if($wynik === false){
-				throw new SQLCopyException('Nie udało się wykonać polecenia COPY', SQLCopyException::BLAD_ROZPOCZECIA);
+				throw new SQLCopyException('Nie udało się wykonać polecenia COPY '.$schema.'.'.$tablica.' FROM stdin', SQLCopyException::BLAD_ROZPOCZECIA);
 			}
 		}
 		
