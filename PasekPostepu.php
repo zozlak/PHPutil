@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright 2012-2013 Mateusz Żółtak
+Copyright 2012-2013 Mateusz Żółtak
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -35,65 +35,65 @@
 
  */
 
-	/*
-	 * Klasa realizująca wyświetlanie na konsoli paska postępu.
-	 * Obiekt klasy należy utworzyć w momencie, od którego ma nastąpić zliczanie czasu.
-	 * Każdy kolejny przetworzony rekord należy potwierdzić wywołaniem metody "nastepnyRekord()".
-	 */
-	class PasekPostepu {
-		private $pocz;
-		private $N=0;
-		private $n=0;
-		private $prog;
-		private $cofnij=0; // liczba znaków w ostatnim komunikacie
-		private $lRekordow;
-		private $dl;
-		
-		public function __construct($lRekordow=null, $prog=1000, $prefiks="\t"){
-			if($lRekordow<0)
-				throw new Exception('ujemna liczba rekordów');
-			$this->lRekordow=$lRekordow;
-			$this->prog=$prog;
-			echo($prefiks.str_repeat(" ", $this->dl));
-			$this->pocz=self::stoper();
-		}
-		
-		function nastepnyRekord(){
-			$this->n++;
-			if($this->n==$this->prog || $this->n+$this->N==$this->lRekordow){
-				$this->wyswietl();
-			}
-		}
-		
-		public function zwrN(){
-			return $this->N+$this->n;
-		}
-		
-		private function wyswietl(){
-			$t=self::stoper();
-			$this->N+=$this->n;
-			$this->n=0;
-				
-			echo(str_repeat(chr(8), $this->cofnij)); // wymaż poprzedni komunikat
-				
-			$procent="";
-			$odPocz=$t-$this->pocz;
-			$v=$this->N/$odPocz;
-			$doKonca="?";
-
-			if($this->lRekordow!==null){
-				$procent=intval($this->N*100/$this->lRekordow)."%";
-				$doKonca=sprintf('%.2f', ($this->lRekordow-$this->N)/$v);
-			}
-
-			$tmp=$this->N."    ".$procent."    ".sprintf('%.2f', $odPocz)." s    v: ".sprintf('%.2f', $v)." rek/s    ETA: ".$doKonca." s    pamięć: ".intval(memory_get_usage()/1024/1024)." MB          ";
-			$this->cofnij=mb_strlen($tmp);
-			echo($tmp);
-		}
-		
-		private static function stoper(){
-		    $czas=explode(" ", microtime());
-		    return doubleval($czas[1].mb_substr($czas[0], 1));
+/*
+ * Klasa realizująca wyświetlanie na konsoli paska postępu.
+ * Obiekt klasy należy utworzyć w momencie, od którego ma nastąpić zliczanie czasu.
+ * Każdy kolejny przetworzony rekord należy potwierdzić wywołaniem metody "nastepnyRekord()".
+ */
+class PasekPostepu {
+	private $pocz;
+	private $N=0;
+	private $n=0;
+	private $prog;
+	private $cofnij=0; // liczba znaków w ostatnim komunikacie
+	private $lRekordow;
+	private $dl;
+	
+	public function __construct($lRekordow=null, $prog=1000, $prefiks="\t"){
+		if($lRekordow<0)
+			throw new Exception('ujemna liczba rekordów');
+		$this->lRekordow=$lRekordow;
+		$this->prog=$prog;
+		echo($prefiks.str_repeat(" ", $this->dl));
+		$this->pocz=self::stoper();
+	}
+	
+	function nastepnyRekord(){
+		$this->n++;
+		if($this->n==$this->prog || $this->n+$this->N==$this->lRekordow){
+			$this->wyswietl();
 		}
 	}
-?>
+	
+	public function zwrN(){
+		return $this->N+$this->n;
+	}
+	
+	private function wyswietl(){
+		$t=self::stoper();
+		$this->N+=$this->n;
+		$this->n=0;
+			
+		echo(str_repeat(chr(8), $this->cofnij)); // wymaż poprzedni komunikat
+			
+		$procent="";
+		$odPocz=$t-$this->pocz;
+		$v=$this->N/$odPocz;
+		$doKonca="?";
+
+		if($this->lRekordow!==null){
+			$procent=intval($this->N*100/$this->lRekordow)."%";
+			$doKonca=sprintf('%.2f', ($this->lRekordow-$this->N)/$v);
+		}
+
+		$tmp=$this->N."    ".$procent."    ".sprintf('%.2f', $odPocz)." s    v: ".sprintf('%.2f', $v)." rek/s    ETA: ".$doKonca." s    pamięć: ".intval(memory_get_usage()/1024/1024)." MB          ";
+		$this->cofnij=mb_strlen($tmp);
+		echo($tmp);
+	}
+	
+	private static function stoper(){
+	    $czas=explode(" ", microtime());
+	    return doubleval($czas[1].mb_substr($czas[0], 1));
+	}
+}
+

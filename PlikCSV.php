@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright 2012-2014 Mateusz Żółtak
+Copyright 2012-2014 Mateusz Żółtak
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -35,99 +35,99 @@
 
  */
 
-	class PlikCSV {
-		private $uchwyt;
-		private $separator;
-		private $tekst;
-		private $ucieczka;
-		private $naglowek;
-		private $kodowanie;
-		
-		public function __construct($nazwaPliku, $separator=',', $tekst='"', $ucieczka='"', $kodowanie=null){
-			if(!is_file($nazwaPliku)){
-				throw new PlikCSVException('"'.$nazwaPliku.'" nie jest plikiem', PlikCSVException::BRAK_PLIKU);
-			}
-			$this->uchwyt = @fopen($nazwaPliku, 'r');
-			if($this->uchwyt === false){
-				throw new PlikCSVException('Nie udało się otworzyć pliku "'.$nazwaPliku.'"', PlikCSVException::BLAD_OTWARCIA_PLIKU);
-			}
-			$this->separator = $separator;
-			$this->tekst = $tekst;
-			$this->ucieczka = $ucieczka;
-			$this->kodowanie = $kodowanie;
+class PlikCSV {
+	private $uchwyt;
+	private $separator;
+	private $tekst;
+	private $ucieczka;
+	private $naglowek;
+	private $kodowanie;
+	
+	public function __construct($nazwaPliku, $separator=',', $tekst='"', $ucieczka='"', $kodowanie=null){
+		if(!is_file($nazwaPliku)){
+			throw new PlikCSVException('"'.$nazwaPliku.'" nie jest plikiem', PlikCSVException::BRAK_PLIKU);
 		}
-		
-		public function wczytajNaglowek($trim=false){
-			$this->naglowek = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-			if($this->naglowek === false){
-				throw new PlikCSVException('Nie udało się wczytać nagłówka', PlikCSVException::BLAD_WCZYTANIA_NAGLOWKA);
-			}
-			if($trim){
-				$this->przytnij($this->naglowek);
-			}
-			if($this->kodowanie !== null){
-				$this->konwertuj($this->naglowek);
-			}
-			return $this->naglowek;
+		$this->uchwyt = @fopen($nazwaPliku, 'r');
+		if($this->uchwyt === false){
+			throw new PlikCSVException('Nie udało się otworzyć pliku "'.$nazwaPliku.'"', PlikCSVException::BLAD_OTWARCIA_PLIKU);
 		}
-		public function zwrNaglowek(){
-			if($this->naglowek === null){
-				throw new PlikCSVException('Nie wczytano nagłówka', PlikCSVException::NIE_WCZYTANO_NAGLOWKA);
-			}
-			return $this->naglowek;
-		}
-		public function ustawNaglowek($naglowek){
-			$this->naglowek = $naglowek;
-		}
-		
-		public function zwrLinie($trim=false, $minKolumn=null){
-			do{
-				$l = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-				if($l === false){
-					return false;
-				}
-			}while($minKolumn > 0 && count($l) < $minKolumn);
-			if($trim){
-				$this->przytnij($l);
-			}
-			if($this->kodowanie !== null){
-				$this->konwertuj($l);
-			}
-			return $l;
-		}
-		
-		public function ustawLinie($offset){
-			fseek($this->uchwyt, 0);
-			while($offset > 0){
-				$l = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-				$offset--;
-			}
-			return $l;
-		}
-		
-		public function __destruct(){
-			fclose($this->uchwyt);
-		}
-		
-		private function przytnij(array &$l){
-			foreach($l as &$i){
-				$i = trim($i);
-			}
-			unset($i);
-		}
-		
-		private function konwertuj(array &$l){
-			foreach($l as &$i){
-				$i = iconv($this->kodowanie, 'UTF-8', $i);
-			}
-			unset($i);
-		}
+		$this->separator = $separator;
+		$this->tekst = $tekst;
+		$this->ucieczka = $ucieczka;
+		$this->kodowanie = $kodowanie;
 	}
 	
-	class PlikCSVException extends Exception{
-		const BRAK_PLIKU = 1;
-		const BLAD_OTWARCIA_PLIKU = 2;
-		const BLAD_WCZYTANIA_NAGLOWKA = 3;
-		const NIE_WCZYTANO_NAGLOWKA = 4;
+	public function wczytajNaglowek($trim=false){
+		$this->naglowek = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
+		if($this->naglowek === false){
+			throw new PlikCSVException('Nie udało się wczytać nagłówka', PlikCSVException::BLAD_WCZYTANIA_NAGLOWKA);
+		}
+		if($trim){
+			$this->przytnij($this->naglowek);
+		}
+		if($this->kodowanie !== null){
+			$this->konwertuj($this->naglowek);
+		}
+		return $this->naglowek;
 	}
-?>
+	public function zwrNaglowek(){
+		if($this->naglowek === null){
+			throw new PlikCSVException('Nie wczytano nagłówka', PlikCSVException::NIE_WCZYTANO_NAGLOWKA);
+		}
+		return $this->naglowek;
+	}
+	public function ustawNaglowek($naglowek){
+		$this->naglowek = $naglowek;
+	}
+	
+	public function zwrLinie($trim=false, $minKolumn=null){
+		do{
+			$l = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
+			if($l === false){
+				return false;
+			}
+		}while($minKolumn > 0 && count($l) < $minKolumn);
+		if($trim){
+			$this->przytnij($l);
+		}
+		if($this->kodowanie !== null){
+			$this->konwertuj($l);
+		}
+		return $l;
+	}
+	
+	public function ustawLinie($offset){
+		fseek($this->uchwyt, 0);
+		while($offset > 0){
+			$l = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
+			$offset--;
+		}
+		return $l;
+	}
+	
+	public function __destruct(){
+		fclose($this->uchwyt);
+	}
+	
+	private function przytnij(array &$l){
+		foreach($l as &$i){
+			$i = trim($i);
+		}
+		unset($i);
+	}
+	
+	private function konwertuj(array &$l){
+		foreach($l as &$i){
+			$i = iconv($this->kodowanie, 'UTF-8', $i);
+		}
+		unset($i);
+	}
+}
+
+class PlikCSVException extends Exception{
+	const BRAK_PLIKU = 1;
+	const BLAD_OTWARCIA_PLIKU = 2;
+	const BLAD_WCZYTANIA_NAGLOWKA = 3;
+	const NIE_WCZYTANO_NAGLOWKA = 4;
+}
+
