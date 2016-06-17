@@ -1,0 +1,23 @@
+{
+    "name": "zozlak/util",
+    "type": "library",
+    "description": "Various helper classes",
+    "keywords": ["REST"],
+    "homepage": "https://github.com/zozlak/PHPutil",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mateusz Żółtak",
+            "email": "zozlak@zozlak.org",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "zozlak\\util\\": "src/zozlak/util/"
+        }
+    }
+}
