@@ -1,204 +1,242 @@
 <?php
-# aby wykonać testy należy wejść do katalogu wyższego poziomu i wykonać "phpunit testy"
 
-require_once('SQLCopy.php');
+/*
+ * The MIT License
+ *
+ * Copyright 2016 zozlak.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-class SQLCopyTest extends PHPUnit_Framework_TestCase {
-	static private $polaczenie;
+namespace tests;
 
-	static public function setUpBeforeClass() {
-		exec('
+use zozlak\util\SQLCopy;
+
+class SQLCopyTest extends \PHPUnit_Framework_TestCase {
+
+    static private $connection;
+
+    static public function setUpBeforeClass() {
+        exec('
 			dropdb test;
 			createdb test;
 		');
-		self::$polaczenie = new PDO('pgsql:dbname=test');
-		self::$polaczenie->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	}
-	
-	protected function setUp(){
-		self::$polaczenie->exec("DROP TABLE IF EXISTS bbb");
-		self::$polaczenie->exec("DROP TABLE IF EXISTS aaa");
-		self::$polaczenie->exec("CREATE TABLE aaa (a int primary key, b text, c bool)");
-		self::$polaczenie->exec("CREATE TABLE bbb (a int references aaa(a), b text, c bool, primary key(a, b))");
-	}
+        self::$connection = new \PDO('pgsql:dbname=test');
+        self::$connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    }
 
-	public static function tearDownAfterClass(){
-		self::$polaczenie = null;
-		exec('dropdb test');
-	}
+    protected function setUp() {
+        self::$connection->exec("DROP TABLE IF EXISTS bbb");
+        self::$connection->exec("DROP TABLE IF EXISTS aaa");
+        self::$connection->exec("CREATE TABLE aaa (a int primary key, b text, c bool)");
+        self::$connection->exec("CREATE TABLE bbb (a int references aaa(a), b text, c bool, primary key(a, b))");
+    }
 
-	/**
-	* @expectedException SQLCopyException
-	* @covers SQLCopy::__construct
-	*/
-	public function testConstruct(){
-		$tmp = new SQLCopy('dbname=test', 'aaa');
-		$tmp->zakoncz();
-		$tmp = new SQLCopy('user=zozlak dbname=bazaKtoraNieIstnieje', 'aaa');
-	}
+    public static function tearDownAfterClass() {
+        self::$connection = null;
+        exec('dropdb test');
+    }
 
-	/**
-	* @expectedException SQLCopyException
-	* @covers SQLCopy::zakoncz
-	* @covers SQLCopy::wstawWiersz
-	*/
-	public function testZakoncz(){
-		$tmp = new SQLCopy('dbname=test', 'aaa');
-		$tmp->zakoncz();
-		$tmp->wstawWiersz("1\t\N\t\N\n");
-	}
+    /**
+     * @expectedException \RuntimeException
+     * @covers \zozlak\util\SQLCopy::__construct
+     */
+    public function testConstruct() {
+        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp->end();
+        $tmp = new SQLCopy('user=zozlak dbname=bazaKtoraNieIstnieje', 'aaa');
+    }
 
-	/**
-	* @covers SQLCopy::wstawWiersz
-	*/
-	public function testKopiujStringi(){
-		$tmp = new SQLCopy('dbname=test', 'aaa');
+    /**
+     * @expectedException \RuntimeException
+     * @covers \zozlak\util\SQLCopy::end
+     * @covers \zozlak\util\SQLCopy::insertRow
+     */
+    public function testEnd() {
+        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp->end();
+        $tmp->insertRow("1\t\N\t\N\n");
+    }
 
-		for($i=0; $i<100; $i++)
-			$tmp->wstawWiersz($i."\t\N\t\N\n");
-		for($i=100; $i<200; $i++)
-			$tmp->wstawWiersz($i."\tąąą bbb\t\N\n");
-		for($i=200; $i<300; $i++)
-			$tmp->wstawWiersz($i."\t\ttrue\n");
-		$tmp->zakoncz();
-		
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa ');
-		$this->assertEquals(300, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE b IS NULL');
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query("SELECT count(*) FROM aaa WHERE b='ąąą bbb'");
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query("SELECT count(*) FROM aaa WHERE b=''");
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE c IS NULL');
-		$this->assertEquals(200, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE c=true');
-		$this->assertEquals(100, $tmp->fetchColumn());
-	}
+    /**
+     * @covers \zozlak\util\SQLCopy::insertRow
+     */
+    public function testCopyStrings() {
+        $tmp = new SQLCopy('dbname=test', 'aaa');
 
-	/**
-	* @depends testKopiujStringi
-	* @covers SQLCopy::wstawWiersz
-	* @covers SQLCopy::wyparsuj
-	*/
-	public function testKopiujTablice(){
-		$tmp = new SQLCopy('dbname=test', 'aaa');
+        for ($i = 0; $i < 100; $i++) {
+            $tmp->insertRow($i . "\t\N\t\N\n");
+        }
+        for ($i = 100; $i < 200; $i++) {
+            $tmp->insertRow($i . "\tąąą bbb\t\N\n");
+        }
+        for ($i = 200; $i < 300; $i++) {
+            $tmp->insertRow($i . "\t\ttrue\n");
+        }
+        $tmp->end();
 
-		for($i=0; $i<100; $i++)
-			$tmp->wstawWiersz(array($i, null, null));
-		for($i=100; $i<200; $i++)
-			$tmp->wstawWiersz(array($i, 'ąąą bbb', null));
-		for($i=200; $i<300; $i++)
-			$tmp->wstawWiersz(array($i, '', true));
-		$tmp->zakoncz();
-		
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa ');
-		$this->assertEquals(300, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE b IS NULL');
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query("SELECT count(*) FROM aaa WHERE b='ąąą bbb'");
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query("SELECT count(*) FROM aaa WHERE b=''");
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE c IS NULL');
-		$this->assertEquals(200, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE c=true');
-		$this->assertEquals(100, $tmp->fetchColumn());
-	}
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa ');
+        $this->assertEquals(300, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE b IS NULL');
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query("SELECT count(*) FROM aaa WHERE b='ąąą bbb'");
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query("SELECT count(*) FROM aaa WHERE b=''");
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE c IS NULL');
+        $this->assertEquals(200, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE c=true');
+        $this->assertEquals(100, $tmp->fetchColumn());
+    }
 
-	/**
-	* @depends testKopiujTablice
-	* @covers SQLCopy::wstawWiersz
-	* @covers SQLCopy::wyparsuj
-	*/
-	public function testKopiujNietypoweTablice(){
-		$tmp = new SQLCopy('dbname=test', 'aaa', array('null'=>array('', 'NA'), 'true'=>array('T', 'true')));
+    /**
+     * @depends testCopyStrings
+     * @covers \zozlak\util\SQLCopy::insertRow
+     * @covers \zozlak\util\SQLCopy::escape
+     */
+    public function testCopyTables() {
+        $tmp = new SQLCopy('dbname=test', 'aaa');
 
-		for($i=0; $i<100; $i++)
-			$tmp->wstawWiersz(array($i, 'NA', null));
-		for($i=100; $i<200; $i++)
-			$tmp->wstawWiersz(array($i, 'ąąą bbb', true));
-		for($i=200; $i<300; $i++)
-			$tmp->wstawWiersz(array($i, '', 'T'));
-		for($i=300; $i<400; $i++)
-			$tmp->wstawWiersz(array($i, null, 'true'));
-		$tmp->zakoncz();
-		
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa ');
-		$this->assertEquals(400, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE b IS NULL');
-		$this->assertEquals(300, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query("SELECT count(*) FROM aaa WHERE b='ąąą bbb'");
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query("SELECT count(*) FROM aaa WHERE b=''");
-		$this->assertEquals(0, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE c IS NULL');
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa WHERE c=true');
-		$this->assertEquals(300, $tmp->fetchColumn());
-	}
+        for ($i = 0; $i < 100; $i++) {
+            $tmp->insertRow(array($i, null, null));
+        }
+        for ($i = 100; $i < 200; $i++) {
+            $tmp->insertRow(array($i, 'ąąą bbb', null));
+        }
+        for ($i = 200; $i < 300; $i++) {
+            $tmp->insertRow(array($i, '', true));
+        }
+        $tmp->end();
 
-	/**
-	* @depends testKopiujNietypoweTablice
-	* @covers SQLCopy::wstawWiersz
-	* @covers SQLCopy::wyparsuj
-	*/
-	public function testKopiujNietypoweTabliceBledy(){
-		$tmp = new SQLCopy('dbname=test', 'aaa');
-		$tmp->wstawWiersz(array(1, '', 'Nie'));
-		try{
-			$tmp->zakoncz();
-			throw new Exception('Brak wyjątku');
-		}
-		catch(SQLCopyException $e){
-			$this->assertEquals($e->getCode(), SQLCopyException::BLAD_KONCZENIA);
-		}
-	}
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa ');
+        $this->assertEquals(300, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE b IS NULL');
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query("SELECT count(*) FROM aaa WHERE b='ąąą bbb'");
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query("SELECT count(*) FROM aaa WHERE b=''");
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE c IS NULL');
+        $this->assertEquals(200, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE c=true');
+        $this->assertEquals(100, $tmp->fetchColumn());
+    }
 
-	/**
-	* @depends testKopiujTablice
-	*/
-	public function testSzybkosc(){
-		$t = microtime(true);
-		$tmp1 = new SQLCopy('dbname=test', 'aaa');
-		for($i=0; $i < 1000000; $i++)
-			$tmp1->wstawWiersz(array($i, 'a', null));
-		$tmp1->zakoncz();
-		echo((microtime(true)-$t)."\n");
-	}
+    /**
+     * @depends testCopyTables
+     * @covers \zozlak\util\SQLCopy::insertRow
+     * @covers \zozlak\util\SQLCopy::escape
+     */
+    public function testCopyUnusualTables() {
+        $tmp = new SQLCopy('dbname=test', 'aaa', array('null' => array('', 'NA'), 'true' => array('T', 'true')));
 
-	/**
-	* @depends testKopiujTablice
-	*/
-	public function testKopiujRownolegle(){
-		$tmp1 = new SQLCopy('dbname=test', 'aaa');
-		$tmp2 = new SQLCopy('dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
+        for ($i = 0; $i < 100; $i++) {
+            $tmp->insertRow(array($i, 'NA', null));
+        }
+        for ($i = 100; $i < 200; $i++) {
+            $tmp->insertRow(array($i, 'ąąą bbb', true));
+        }
+        for ($i = 200; $i < 300; $i++) {
+            $tmp->insertRow(array($i, '', 'T'));
+        }
+        for ($i = 300; $i < 400; $i++) {
+            $tmp->insertRow(array($i, null, 'true'));
+        }
+        $tmp->end();
 
-		for($i=0; $i<100; $i++)
-			$tmp1->wstawWiersz(array($i, 'a', null));
-		for($i=0; $i<100; $i++){
-			$tmp2->wstawWiersz(array($i, 'a', null));
-			$tmp2->wstawWiersz(array($i, 'b', null));
-		}
-		$tmp1->zakoncz();
-		$tmp2->zakoncz();
-		
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM aaa ');
-		$this->assertEquals(100, $tmp->fetchColumn());
-		$tmp=self::$polaczenie->query('SELECT count(*) FROM bbb');
-		$this->assertEquals(200, $tmp->fetchColumn());
-	}
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa ');
+        $this->assertEquals(400, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE b IS NULL');
+        $this->assertEquals(300, $tmp->fetchColumn());
+        $tmp = self::$connection->query("SELECT count(*) FROM aaa WHERE b='ąąą bbb'");
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query("SELECT count(*) FROM aaa WHERE b=''");
+        $this->assertEquals(0, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE c IS NULL');
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa WHERE c=true');
+        $this->assertEquals(300, $tmp->fetchColumn());
+    }
 
-	/**
-	* @depends testKopiujTablice
-	*/
-	public function testKopiujWSchemie(){
-		self::$polaczenie->exec("CREATE SCHEMA s");
-		self::$polaczenie->exec("CREATE TABLE s.aaa (a int primary key, b text, c bool)");
-		$tmp1 = new SQLCopy('dbname=test', 'aaa', array(), 's');
-		for($i=0; $i < 100; $i++)
-			$tmp1->wstawWiersz(array($i, 'a', null));
-		$tmp1->zakoncz();
-	}
-}	
+    /**
+     * @depends testCopyUnusualTables
+     * @covers \zozlak\util\SQLCopy::insertRow
+     * @covers \zozlak\util\SQLCopy::escape
+     */
+    public function testCopyUnusualTablesErrors() {
+        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp->insertRow(array(1, '', 'Nie'));
+        try {
+            $tmp->end();
+            throw new \Exception('Brak wyjątku');
+        } catch (\RuntimeException $e) {
+            
+        }
+    }
 
+    /**
+     * @depends testCopyTables
+     */
+    public function testSpeed() {
+        $t = microtime(true);
+        $tmp1 = new SQLCopy('dbname=test', 'aaa');
+        for ($i = 0; $i < 100000; $i++) {
+            $tmp1->insertRow(array($i, 'a', null));
+        }
+        $tmp1->end();
+        echo((microtime(true) - $t) . "\n");
+    }
+
+    /**
+     * @depends testCopyTables
+     */
+    public function testParallelCopy() {
+        $tmp1 = new SQLCopy('dbname=test', 'aaa');
+        $tmp2 = new SQLCopy('dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
+
+        for ($i = 0; $i < 100; $i++) {
+            $tmp1->insertRow(array($i, 'a', null));
+        }
+        for ($i = 0; $i < 100; $i++) {
+            $tmp2->insertRow(array($i, 'a', null));
+            $tmp2->insertRow(array($i, 'b', null));
+        }
+        $tmp1->end();
+        $tmp2->end();
+
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa ');
+        $this->assertEquals(100, $tmp->fetchColumn());
+        $tmp = self::$connection->query('SELECT count(*) FROM bbb');
+        $this->assertEquals(200, $tmp->fetchColumn());
+    }
+
+    /**
+     * @depends testCopyTables
+     */
+    public function testCopyInSchema() {
+        self::$connection->exec("CREATE SCHEMA s");
+        self::$connection->exec("CREATE TABLE s.aaa (a int primary key, b text, c bool)");
+        $tmp1 = new SQLCopy('dbname=test', 'aaa', array(), 's');
+        for ($i = 0; $i < 100; $i++) {
+            $tmp1->insertRow(array($i, 'a', null));
+        }
+        $tmp1->end();
+    }
+
+}

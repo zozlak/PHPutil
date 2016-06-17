@@ -1,133 +1,120 @@
 <?php
+
 /*
-Copyright 2012-2014 Mateusz Żółtak
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Niniejszy program jest wolnym oprogramowaniem; możesz go
-    rozprowadzać dalej i/lub modyfikować na warunkach Mniej Powszechnej
-    Licencji Publicznej GNU, wydanej przez Fundację Wolnego
-    Oprogramowania - według wersji 3 tej Licencji lub (według twojego
-    wyboru) którejś z późniejszych wersji.
-
-    Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on
-    użyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyślnej
-    gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKREŚLONYCH
-    ZASTOSOWAŃ. W celu uzyskania bliższych informacji sięgnij do
-    Powszechnej Licencji Publicznej GNU.
-
-    Z pewnością wraz z niniejszym programem otrzymałeś też egzemplarz
-    Powszechnej Licencji Publicznej GNU (GNU General Public License);
-    jeśli nie - napisz do Free Software Foundation, Inc., 59 Temple
-    Place, Fifth Floor, Boston, MA  02110-1301  USA
-
+ * The MIT License
+ *
+ * Copyright 2016 zozlak.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-class PlikCSV {
-	private $uchwyt;
-	private $separator;
-	private $tekst;
-	private $ucieczka;
-	private $naglowek;
-	private $kodowanie;
-	
-	public function __construct($nazwaPliku, $separator=',', $tekst='"', $ucieczka='"', $kodowanie=null){
-		if(!is_file($nazwaPliku)){
-			throw new PlikCSVException('"'.$nazwaPliku.'" nie jest plikiem', PlikCSVException::BRAK_PLIKU);
-		}
-		$this->uchwyt = @fopen($nazwaPliku, 'r');
-		if($this->uchwyt === false){
-			throw new PlikCSVException('Nie udało się otworzyć pliku "'.$nazwaPliku.'"', PlikCSVException::BLAD_OTWARCIA_PLIKU);
-		}
-		$this->separator = $separator;
-		$this->tekst = $tekst;
-		$this->ucieczka = $ucieczka;
-		$this->kodowanie = $kodowanie;
-	}
-	
-	public function wczytajNaglowek($trim=false){
-		$this->naglowek = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-		if($this->naglowek === false){
-			throw new PlikCSVException('Nie udało się wczytać nagłówka', PlikCSVException::BLAD_WCZYTANIA_NAGLOWKA);
-		}
-		if($trim){
-			$this->przytnij($this->naglowek);
-		}
-		if($this->kodowanie !== null){
-			$this->konwertuj($this->naglowek);
-		}
-		return $this->naglowek;
-	}
-	public function zwrNaglowek(){
-		if($this->naglowek === null){
-			throw new PlikCSVException('Nie wczytano nagłówka', PlikCSVException::NIE_WCZYTANO_NAGLOWKA);
-		}
-		return $this->naglowek;
-	}
-	public function ustawNaglowek($naglowek){
-		$this->naglowek = $naglowek;
-	}
-	
-	public function zwrLinie($trim=false, $minKolumn=null){
-		do{
-			$l = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-			if($l === false){
-				return false;
-			}
-		}while($minKolumn > 0 && count($l) < $minKolumn);
-		if($trim){
-			$this->przytnij($l);
-		}
-		if($this->kodowanie !== null){
-			$this->konwertuj($l);
-		}
-		return $l;
-	}
-	
-	public function ustawLinie($offset){
-		fseek($this->uchwyt, 0);
-		while($offset > 0){
-			$l = fgetcsv($this->uchwyt, 0, $this->separator, $this->tekst, $this->ucieczka);
-			$offset--;
-		}
-		return $l;
-	}
-	
-	public function __destruct(){
-		fclose($this->uchwyt);
-	}
-	
-	private function przytnij(array &$l){
-		foreach($l as &$i){
-			$i = trim($i);
-		}
-		unset($i);
-	}
-	
-	private function konwertuj(array &$l){
-		foreach($l as &$i){
-			$i = iconv($this->kodowanie, 'UTF-8', $i);
-		}
-		unset($i);
-	}
-}
+namespace zozlak\util;
 
-class PlikCSVException extends Exception{
-	const BRAK_PLIKU = 1;
-	const BLAD_OTWARCIA_PLIKU = 2;
-	const BLAD_WCZYTANIA_NAGLOWKA = 3;
-	const NIE_WCZYTANO_NAGLOWKA = 4;
-}
+class CsvFile {
 
+    private $handle;
+    private $delimiter;
+    private $enclosure;
+    private $escape;
+    private $header;
+    private $encoding;
+
+    public function __construct($fileName, $delimiter = ',', $enclosure = '"', $escape = '"', $encoding = null) {
+        if (!is_file($fileName)) {
+            throw new \InvalidArgumentException('"' . $fileName . '" is not a file');
+        }
+        $this->handle = @fopen($fileName, 'r');
+        if ($this->handle === false) {
+            throw new \RuntimeException('Could not open "' . $fileName . '"');
+        }
+        $this->delimiter = $delimiter;
+        $this->enclosure = $enclosure;
+        $this->escape = $escape;
+        $this->encoding = $encoding;
+    }
+
+    public function readHeader($trim = false) {
+        $this->header = fgetcsv($this->handle, 0, $this->delimiter, $this->enclosure, $this->escape);
+        if ($this->header === false) {
+            throw new \RuntimeException('Failed to read a header');
+        }
+        if ($trim) {
+            $this->trim($this->header);
+        }
+        if ($this->encoding !== null) {
+            $this->toUtf8($this->header);
+        }
+        return $this->header;
+    }
+
+    public function getHeader() {
+        if ($this->header === null) {
+            throw new \BadMethodCallException('Read header first');
+        }
+        return $this->header;
+    }
+
+    public function setHeader($header) {
+        $this->header = $header;
+    }
+
+    public function getLine($trim = false, $minColCount = null) {
+        do {
+            $l = fgetcsv($this->handle, 0, $this->delimiter, $this->enclosure, $this->escape);
+            if ($l === false) {
+                return false;
+            }
+        } while ($minColCount > 0 && count($l) < $minColCount);
+        if ($trim) {
+            $this->trim($l);
+        }
+        if ($this->encoding !== null) {
+            $this->toUtf8($l);
+        }
+        return $l;
+    }
+
+    public function setLine($offset) {
+        fseek($this->handle, 0);
+        while ($offset > 0) {
+            $l = fgetcsv($this->handle, 0, $this->delimiter, $this->enclosure, $this->escape);
+            $offset--;
+        }
+        return $l;
+    }
+
+    public function __destruct() {
+        fclose($this->handle);
+    }
+
+    private function trim(array &$l) {
+        foreach ($l as &$i) {
+            $i = trim($i);
+        }
+        unset($i);
+    }
+
+    private function toUtf8(array &$l) {
+        foreach ($l as &$i) {
+            $i = iconv($this->encoding, 'UTF-8', $i);
+        }
+        unset($i);
+    }
+
+}
