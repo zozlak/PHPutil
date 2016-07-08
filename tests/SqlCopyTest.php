@@ -26,9 +26,9 @@
 
 namespace tests;
 
-use zozlak\util\SQLCopy;
+use zozlak\util\SqlCopy;
 
-class SQLCopyTest extends \PHPUnit_Framework_TestCase {
+class SqlCopyTest extends \PHPUnit_Framework_TestCase {
 
     static private $connection;
 
@@ -55,30 +55,30 @@ class SQLCopyTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \RuntimeException
-     * @covers \zozlak\util\SQLCopy::__construct
+     * @covers \zozlak\util\SqlCopy::__construct
      */
     public function testConstruct() {
-        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy('dbname=test', 'aaa');
         $tmp->end();
-        $tmp = new SQLCopy('user=zozlak dbname=bazaKtoraNieIstnieje', 'aaa');
+        $tmp = new SqlCopy('user=zozlak dbname=bazaKtoraNieIstnieje', 'aaa');
     }
 
     /**
      * @expectedException \RuntimeException
-     * @covers \zozlak\util\SQLCopy::end
+     * @covers \zozlak\util\SqlCopy::end
      * @covers \zozlak\util\SQLCopy::insertRow
      */
     public function testEnd() {
-        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy('dbname=test', 'aaa');
         $tmp->end();
         $tmp->insertRow("1\t\N\t\N\n");
     }
 
     /**
-     * @covers \zozlak\util\SQLCopy::insertRow
+     * @covers \zozlak\util\SqlCopy::insertRow
      */
     public function testCopyStrings() {
-        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy('dbname=test', 'aaa');
 
         for ($i = 0; $i < 100; $i++) {
             $tmp->insertRow($i . "\t\N\t\N\n");
@@ -107,11 +107,11 @@ class SQLCopyTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testCopyStrings
-     * @covers \zozlak\util\SQLCopy::insertRow
-     * @covers \zozlak\util\SQLCopy::escape
+     * @covers \zozlak\util\SqlCopy::insertRow
+     * @covers \zozlak\util\SqlCopy::escape
      */
     public function testCopyTables() {
-        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy('dbname=test', 'aaa');
 
         for ($i = 0; $i < 100; $i++) {
             $tmp->insertRow(array($i, null, null));
@@ -140,11 +140,11 @@ class SQLCopyTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testCopyTables
-     * @covers \zozlak\util\SQLCopy::insertRow
-     * @covers \zozlak\util\SQLCopy::escape
+     * @covers \zozlak\util\SqlCopy::insertRow
+     * @covers \zozlak\util\SqlCopy::escape
      */
     public function testCopyUnusualTables() {
-        $tmp = new SQLCopy('dbname=test', 'aaa', array('null' => array('', 'NA'), 'true' => array('T', 'true')));
+        $tmp = new SqlCopy('dbname=test', 'aaa', array('null' => array('', 'NA'), 'true' => array('T', 'true')));
 
         for ($i = 0; $i < 100; $i++) {
             $tmp->insertRow(array($i, 'NA', null));
@@ -176,11 +176,11 @@ class SQLCopyTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testCopyUnusualTables
-     * @covers \zozlak\util\SQLCopy::insertRow
-     * @covers \zozlak\util\SQLCopy::escape
+     * @covers \zozlak\util\SqlCopy::insertRow
+     * @covers \zozlak\util\SqlCopy::escape
      */
     public function testCopyUnusualTablesErrors() {
-        $tmp = new SQLCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy('dbname=test', 'aaa');
         $tmp->insertRow(array(1, '', 'Nie'));
         try {
             $tmp->end();
@@ -195,7 +195,7 @@ class SQLCopyTest extends \PHPUnit_Framework_TestCase {
      */
     public function testSpeed() {
         $t = microtime(true);
-        $tmp1 = new SQLCopy('dbname=test', 'aaa');
+        $tmp1 = new SqlCopy('dbname=test', 'aaa');
         for ($i = 0; $i < 100000; $i++) {
             $tmp1->insertRow(array($i, 'a', null));
         }
@@ -207,8 +207,8 @@ class SQLCopyTest extends \PHPUnit_Framework_TestCase {
      * @depends testCopyTables
      */
     public function testParallelCopy() {
-        $tmp1 = new SQLCopy('dbname=test', 'aaa');
-        $tmp2 = new SQLCopy('dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
+        $tmp1 = new SqlCopy('dbname=test', 'aaa');
+        $tmp2 = new SqlCopy('dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
 
         for ($i = 0; $i < 100; $i++) {
             $tmp1->insertRow(array($i, 'a', null));
@@ -232,7 +232,7 @@ class SQLCopyTest extends \PHPUnit_Framework_TestCase {
     public function testCopyInSchema() {
         self::$connection->exec("CREATE SCHEMA s");
         self::$connection->exec("CREATE TABLE s.aaa (a int primary key, b text, c bool)");
-        $tmp1 = new SQLCopy('dbname=test', 'aaa', array(), 's');
+        $tmp1 = new SqlCopy('dbname=test', 'aaa', array(), 's');
         for ($i = 0; $i < 100; $i++) {
             $tmp1->insertRow(array($i, 'a', null));
         }
