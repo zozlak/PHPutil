@@ -41,7 +41,7 @@ class HtmlWidgets {
             $a .= ' ' . $h . '="' . self::e($i) . '"';
         }
         printf(
-            '<input type="%s" name="%s" value="%s" class="%s" onchange="%s" %s/>', self::e($type), self::e($name), self::e($value), self::e($class), self::e($onchange), $a
+            '<input type="%s" name="%s" value="%s" class="%s" %s/>', self::e($type), self::e($name), self::e($value), self::e($class), $a
         );
     }
 
@@ -79,7 +79,7 @@ class HtmlWidgets {
         foreach ($opts as $h => $i) {
             $w = $type == 'pary' ? $h : $i;
             $o .= sprintf(
-                '<label><input type="radio" name="%s" value="%s" %s onclick="%s"/>&nbsp;%s</label>%s', self::e($name), self::e($w), $value === $w || $w != '' && $value == $w ? 'checked="checked"' : '', self::e($onclick), self::e($i), $br ? '<br/>' : ''
+                '<label><input type="radio" name="%s" class="%s" value="%s" %s onclick="%s"/>&nbsp;%s</label>%s', self::e($name), self::e($class), self::e($w), $value === $w || $w != '' && $value == $w ? 'checked="checked"' : '', self::e($onclick), self::e($i), $br ? '<br/>' : ''
             );
         }
         printf($o);
