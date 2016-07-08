@@ -32,7 +32,7 @@ namespace zozlak\util;
  * Obsługuje dostarczanie kolejnych rekordów w postaci tablicy i dba o to, aby przetłumaczyć
  * zadane wartości na typy NULL/true/false SQL-a
  */
-class SQLCopy {
+class SqlCopy {
 
     private $connection;
     private $options = array('null' => array(), 'false' => array(false), 'true' => array(true));
