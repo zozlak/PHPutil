@@ -2,7 +2,7 @@
     "name": "zozlak/util",
     "type": "library",
     "description": "Various helper classes",
-    "keywords": ["REST"],
+    "keywords": [],
     "homepage": "https://github.com/zozlak/PHPutil",
     "license": "MIT",
     "authors": [
