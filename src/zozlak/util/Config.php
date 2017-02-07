@@ -26,17 +26,19 @@
 
 namespace zozlak\util;
 
+use Iterator;
+
 /**
  * Description of Config
  *
  * @author zozlak
  */
-class Config {
+class Config implements Iterator {
 
     private $config = array();
 
-    public function __construct($path) {
-        $this->config = parse_ini_file($path);
+    public function __construct($path, $sections = false) {
+        $this->config = parse_ini_file($path, $sections);
     }
 
     public function get($key) {
@@ -47,6 +49,30 @@ class Config {
         $overwr = array_key_exists($key, self::$config);
         $this->config[$key] = $value;
         return $overwr;
+    }
+
+    public function overwrite($config) {
+        $this->config = $config;
+    }
+    
+    public function current() {
+        return current($this->config);
+    }
+
+    public function key() {
+        return key($this->config);
+    }
+
+    public function next() {
+        next($this->config);
+    }
+
+    public function rewind() {
+        reset($this->config);
+    }
+
+    public function valid() {
+        return key($this->config) !== null;
     }
 
 }
