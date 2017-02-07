@@ -46,7 +46,7 @@ class Config implements Iterator {
     }
 
     public function set($key, $value) {
-        $overwr = array_key_exists($key, self::$config);
+        $overwr = array_key_exists($key, $this->config);
         $this->config[$key] = $value;
         return $overwr;
     }
