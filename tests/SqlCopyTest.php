@@ -28,7 +28,7 @@ namespace tests;
 
 use zozlak\util\SqlCopy;
 
-class SqlCopyTest extends \PHPUnit_Framework_TestCase {
+class SqlCopyTest extends \PHPUnit\Framework\TestCase {
 
     static private $connection;
 

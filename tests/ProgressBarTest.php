@@ -28,7 +28,7 @@ namespace tests;
 
 use zozlak\util\ProgressBar;
 
-class ProgressBarTest extends \PHPUnit_Framework_TestCase {
+class ProgressBarTest extends \PHPUnit\Framework\TestCase {
 
     protected function setUp() {
         

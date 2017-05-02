@@ -28,7 +28,7 @@ namespace tests;
 
 use zozlak\util\CsvFile;
 
-class CsvFileTest extends \PHPUnit_Framework_TestCase {
+class CsvFileTest extends \PHPUnit\Framework\TestCase {
 
     static public function setUpBeforeClass() {
         
