@@ -28,7 +28,7 @@ namespace tests;
 
 use zozlak\util\CharBuffer;
 
-class CharBufferTest extends \PHPUnit_Framework_TestCase {
+class CharBufferTest extends \PHPUnit\Framework\TestCase {
 
     static public function setUpBeforeClass() {
         
