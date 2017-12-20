@@ -50,7 +50,7 @@ class DbHandle {
     static public function setHandle($connParam, $persistent = false) {
         $attr = $persistent ? array(PDO::ATTR_PERSISTENT => true) : array();
         self::$connParam = $connParam;
-        self::$PDO = new PDO($connParam, null, null, $persistent);
+        self::$PDO = new PDO($connParam, null, null, $attr);
         self::$PDO->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         self::$PDO->beginTransaction();
     }
