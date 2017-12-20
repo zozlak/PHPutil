@@ -26,6 +26,8 @@
 
 namespace zozlak\util;
 
+use PDO;
+
 /**
  * Description of DbHandle
  *
@@ -38,10 +40,18 @@ class DbHandle {
      * @var \PDO
      */
     static private $PDO;
+    
+    /**
+     *
+     * @var string
+     */
+    static private $connParam;
 
-    static public function setHandle($connParam) {
-        self::$PDO = new \PDO($connParam);
-        self::$PDO->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    static public function setHandle($connParam, $persistent = false) {
+        $attr = $persistent ? array(PDO::ATTR_PERSISTENT => true) : array();
+        self::$connParam = $connParam;
+        self::$PDO = new PDO($connParam, null, null, $persistent);
+        self::$PDO->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         self::$PDO->beginTransaction();
     }
 
@@ -53,6 +63,17 @@ class DbHandle {
         return self::$PDO;
     }
 
+    /**
+     * 
+     * @return string
+     */
+    static public function getConnHandle() {
+        return self::$connParam;
+    }
+
+        /**
+     * 
+     */
     static public function commit() {
         if(self::$PDO->inTransaction()){
             self::$PDO->commit();
