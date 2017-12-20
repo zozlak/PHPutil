@@ -67,7 +67,7 @@ class DbHandle {
      * 
      * @return string
      */
-    static public function getConnHandle() {
+    static public function getConnParam() {
         return self::$connParam;
     }
 
