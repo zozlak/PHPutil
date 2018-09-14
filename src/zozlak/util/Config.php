@@ -41,7 +41,10 @@ class Config implements Iterator {
         $this->config = parse_ini_file($path, $sections);
     }
 
-    public function get($key) {
+    public function get($key, $silent = false) {
+        if ($silent && !isset($this->config[$key])) {
+            return null;
+        }
         return $this->config[$key];
     }
 
