@@ -26,6 +26,7 @@
 
 namespace zozlak\util;
 
+use BadMethodCallException;
 use Iterator;
 
 /**
@@ -35,17 +36,36 @@ use Iterator;
  */
 class Config implements Iterator {
 
-    private $config = array();
+    const NOTICE = 1;
+    const EXCEPTION = 2;
+    const NULL = 3;
+    
+    private $config = [];
+    private $mode;
 
-    public function __construct($path, $sections = false) {
+    public function __construct($path, $sections = false, $mode = self::NOTICE) {
         $this->config = parse_ini_file($path, $sections);
+        $this->mode = $mode;
     }
 
-    public function get($key, $silent = false) {
-        if ($silent && !isset($this->config[$key])) {
-            return null;
+    public function get($key, $mode = null) {
+        $mode = $mode === null ? $this->mode : $mode;
+        if (!in_array($mode, [self::NOTICE, self::EXCEPTION, self::NULL])){
+            throw new BadMethodCallException('Wrong mode');
         }
-        return $this->config[$key];
+        
+        if (isset($this->config[$key])) {
+            return $this->config[$key];
+        }
+        
+        switch ($mode){
+            case self::NULL:
+                return null;
+            case self::EXCEPTION:
+                throw new BadMethodCallException('No such key');
+            default:
+                return $this->config[$key];
+        }
     }
 
     public function set($key, $value) {
