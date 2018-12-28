@@ -40,17 +40,17 @@ class DbHandle {
      * @var \PDO
      */
     static private $PDO;
-    
+
     /**
      *
      * @var string
      */
     static private $connParam;
 
-    static public function setHandle($connParam, $persistent = false) {
-        $attr = $persistent ? array(PDO::ATTR_PERSISTENT => true) : array();
+    static public function setHandle(string $connParam, bool $persistent = false) {
+        $attr            = $persistent ? [PDO::ATTR_PERSISTENT => true] : [];
         self::$connParam = $connParam;
-        self::$PDO = new PDO($connParam, null, null, $attr);
+        self::$PDO       = new PDO($connParam, null, null, $attr);
         self::$PDO->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         self::$PDO->beginTransaction();
     }
@@ -59,7 +59,7 @@ class DbHandle {
      * 
      * @return \PDO
      */
-    static public function getHandle() {
+    static public function getHandle(): PDO {
         return self::$PDO;
     }
 
@@ -67,15 +67,15 @@ class DbHandle {
      * 
      * @return string
      */
-    static public function getConnParam() {
+    static public function getConnParam(): string {
         return self::$connParam;
     }
 
-        /**
+    /**
      * 
      */
-    static public function commit() {
-        if(self::$PDO->inTransaction()){
+    static public function commit(): void {
+        if (self::$PDO->inTransaction()) {
             self::$PDO->commit();
         }
     }

@@ -27,17 +27,29 @@
 namespace zozlak\util;
 
 /**
- * Klasa uzupełniająca braki w bibliotece PDO uniemożliwające skorzystanie z SQL COPY
- *
- * Obsługuje dostarczanie kolejnych rekordów w postaci tablicy i dba o to, aby przetłumaczyć
- * zadane wartości na typy NULL/true/false SQL-a
+ * PHP's PDO class doesn't support a streaming COPY support for Postgresql.
+ * This class fills the gap allowing to provide data rows one by one.
  */
 class SqlCopy {
 
     private $connection;
-    private $options = array('null' => array(), 'false' => array(false), 'true' => array(true));
+    private $options = ['null' => [], 'false' => [false], 'true' => []];
 
-    public function __construct($conString, $tableName, array $options = array(), $schema = 'public') {
+    /**
+     * 
+     * @param string $conString Postgresql connection string 
+     *   (e.g. 'host=my.host port=5432 dbname=myDb user=me password=myPswd').
+     *   PDO connection strings are also supported.
+     * @param string $tableName table name
+     * @param array $options an array providing special value (NULL, TRUE, 
+     *   FALSE) mappings.
+     * @param type $schema schema name - use if the table is not in the default 
+     *   search path (which is typically equivalent to "not in the public schema")
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
+     */
+    public function __construct(string $conString, string $tableName,
+                                array $options = [], string $schema = 'public') {
         foreach ($options as $h => $i) {
             if (!isset($this->options[$h])) {
                 throw new \InvalidArgumentException('Wrong options. Available options: ' . implode(', ', array_keys($this->options)));
@@ -48,22 +60,29 @@ class SqlCopy {
             $this->options[$h] = $i;
         }
 
-        $conString = str_replace('pgsql:', '', $conString); // pozbaw ew. dane w formacie PDO przedrostka typu bazy
+        $conString        = str_replace('pgsql:', '', $conString); // pozbaw ew. dane w formacie PDO przedrostka typu bazy
         // pg_pconnect() nie przyspiesza operacji (najwyraźniej COPY i tak trzyma otwarte połączenie), 
         // natomiast uniemożliwia równoległe kopiowanie kilku tablic - stąd połącz za pomocą zwykłego pg_connect()
         $this->connection = @pg_connect($conString, \PGSQL_CONNECT_FORCE_NEW);
         if ($this->connection === false) {
             throw new \RuntimeException('Connection failed (' . $conString . ')');
         }
-        $schema = pg_escape_identifier($this->connection, $schema);
+        $schema    = pg_escape_identifier($this->connection, $schema);
         $tableName = pg_escape_identifier($this->connection, $tableName);
-        $res = @pg_query("COPY " . $schema . "." . $tableName . " FROM stdin");
+        $res       = @pg_query("COPY " . $schema . "." . $tableName . " FROM stdin");
         if ($res === false) {
             throw new \RuntimeException('Failed to execute: COPY ' . $schema . '.' . $tableName . ' FROM stdin');
         }
     }
 
-    public function insertRow($row) {
+    /**
+     * Ingests a row of data.
+     * @param type $row row to be ingested into the database (an array or an 
+     *   already properly escaped input row)
+     * @return void
+     * @throws \RuntimeException
+     */
+    public function insertRow($row): void {
         if ($this->connection === null) {
             throw new \RuntimeException('Copying already ended. Create a new object');
         }
@@ -76,7 +95,7 @@ class SqlCopy {
         }
     }
 
-    public function end() {
+    public function end(): void {
         if ($this->connection) {
             $res = @pg_put_line($this->connection, "\\.\n");
             if ($res === false) {
@@ -98,7 +117,7 @@ class SqlCopy {
         }
     }
 
-    private function escape(array &$row) {
+    private function escape(array &$row): string {
         foreach ($row as &$i) {
             if ($i === null || in_array($i, $this->options['null'], true)) {
                 $i = '\N';

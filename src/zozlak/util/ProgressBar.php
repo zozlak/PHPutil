@@ -34,8 +34,8 @@ namespace zozlak\util;
 class ProgressBar {
 
     private $start;
-    private $N = 0;
-    private $n = 0;
+    private $N       = 0;
+    private $n       = 0;
     private $step;
     private $charLen = 0; // liczba znaków w ostatnim komunikacie
     private $totalCount;
@@ -48,64 +48,66 @@ class ProgressBar {
      * @param string $prefix
      * @throws Exception
      */
-    public function __construct($recordsCount = null, $step = 1000, $prefix = "\t") {
+    public function __construct(int $recordsCount = null, int $step = 1000,
+                                string $prefix = "\t") {
         if ($recordsCount < 0) {
             throw new Exception('ujemna liczba rekordów');
         }
         $this->totalCount = $recordsCount;
-        $this->step = $step;
+        $this->step       = $step;
         echo($prefix . str_repeat(" ", $this->len));
-        $this->start = self::stopwatch();
+        $this->start      = self::stopwatch();
     }
 
     /**
      * 
      */
-    function next() {
+    function next(): int {
         $this->n++;
         if ($this->n == $this->step || $this->n + $this->N == $this->totalCount) {
             $this->show();
         }
+        return $this->getN();
     }
 
     /**
      * 
      * @return integer
      */
-    public function getN() {
+    public function getN(): int {
         return $this->N + $this->n;
     }
 
     /**
      * 
      */
-    public function finish() {
+    public function finish(): void {
         $this->show();
     }
 
     /**
      * 
      */
-    private function show() {
-        $t = self::stopwatch();
+    private function show(): void {
+        $t       = self::stopwatch();
         $this->N += $this->n;
         $this->n = 0;
 
         echo(str_repeat(chr(8), $this->charLen)); // wymaż poprzedni komunikat
 
         $percentage = "";
-        $fromStart = $t - $this->start;
-        $v = $this->N / $fromStart;
-        $left = "?";
+        $fromStart  = $t - $this->start;
+        $v          = $this->N / $fromStart;
+        $left       = "?";
 
         if ($this->totalCount !== null) {
             $percentage = intval($this->N * 100 / $this->totalCount) . "%";
-            $left = sprintf('%.2f', ($this->totalCount - $this->N) / $v);
+            $left       = sprintf('%.2f', ($this->totalCount - $this->N) / $v);
         }
 
-        $tmp = sprintf(
-            '%d    %s    %.2f s    v: %.2f rec/s    ETA: %s s    memory: %d MB          ', 
-            $this->N, $percentage, $fromStart, $v, $left, 
+        $tmp           = sprintf(
+            '%d    %s    %.2f s    v: %.2f rec/s    ETA: %s s    memory: %d MB          ',
+            $this->N, $percentage, $fromStart, $v, $left,
             intval(memory_get_usage(true) / 1024 / 1024)
         );
         $this->charLen = mb_strlen($tmp);
@@ -116,7 +118,7 @@ class ProgressBar {
      * 
      * @return float
      */
-    private static function stopwatch() {
+    private static function stopwatch(): float {
         return microtime(true);
     }
 

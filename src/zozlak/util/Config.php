@@ -36,29 +36,30 @@ use Iterator;
  */
 class Config implements Iterator {
 
-    const NOTICE = 1;
+    const NOTICE    = 1;
     const EXCEPTION = 2;
-    const NULL = 3;
-    
+    const NULL      = 3;
+
     private $config = [];
     private $mode;
 
-    public function __construct($path, $sections = false, $mode = self::NOTICE) {
+    public function __construct(string $path, bool $sections = false,
+                                int $mode = self::NOTICE) {
         $this->config = parse_ini_file($path, $sections);
-        $this->mode = $mode;
+        $this->mode   = $mode;
     }
 
-    public function get($key, $mode = null) {
+    public function get(string $key, int $mode = null) {
         $mode = $mode === null ? $this->mode : $mode;
-        if (!in_array($mode, [self::NOTICE, self::EXCEPTION, self::NULL])){
+        if (!in_array($mode, [self::NOTICE, self::EXCEPTION, self::NULL])) {
             throw new BadMethodCallException('Wrong mode');
         }
-        
+
         if (isset($this->config[$key])) {
             return $this->config[$key];
         }
-        
-        switch ($mode){
+
+        switch ($mode) {
             case self::NULL:
                 return null;
             case self::EXCEPTION:
@@ -68,16 +69,16 @@ class Config implements Iterator {
         }
     }
 
-    public function set($key, $value) {
-        $overwr = array_key_exists($key, $this->config);
+    public function set(string $key, string $value): bool {
+        $overwr             = array_key_exists($key, $this->config);
         $this->config[$key] = $value;
         return $overwr;
     }
 
-    public function overwrite($config) {
+    public function overwrite(array $config): void {
         $this->config = $config;
     }
-    
+
     public function current() {
         return current($this->config);
     }

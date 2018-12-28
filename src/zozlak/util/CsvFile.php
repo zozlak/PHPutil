@@ -26,6 +26,10 @@
 
 namespace zozlak\util;
 
+/**
+ * High level CSV processing interface. Deals with encoding, trimming values, 
+ * skipping lines lacking columns, etc.
+ */
 class CsvFile {
 
     private $handle;
@@ -35,7 +39,9 @@ class CsvFile {
     private $header;
     private $encoding;
 
-    public function __construct($fileName, $delimiter = ',', $enclosure = '"', $escape = '"', $encoding = null) {
+    public function __construct(string $fileName, string $delimiter = ',',
+                                string $enclosure = '"', string $escape = '"',
+                                string $encoding = null) {
         if (!is_file($fileName)) {
             throw new \InvalidArgumentException('"' . $fileName . '" is not a file');
         }
@@ -45,11 +51,11 @@ class CsvFile {
         }
         $this->delimiter = $delimiter;
         $this->enclosure = $enclosure;
-        $this->escape = $escape;
-        $this->encoding = $encoding;
+        $this->escape    = $escape;
+        $this->encoding  = $encoding;
     }
 
-    public function readHeader($trim = false) {
+    public function readHeader($trim = false): array {
         $this->header = fgetcsv($this->handle, 0, $this->delimiter, $this->enclosure, $this->escape);
         if ($this->header === false) {
             throw new \RuntimeException('Failed to read a header');
@@ -63,18 +69,18 @@ class CsvFile {
         return $this->header;
     }
 
-    public function getHeader() {
+    public function getHeader(): array {
         if ($this->header === null) {
             throw new \BadMethodCallException('Read header first');
         }
         return $this->header;
     }
 
-    public function setHeader($header) {
+    public function setHeader(array $header): void {
         $this->header = $header;
     }
 
-    public function getLine($trim = false, $minColCount = null) {
+    public function getLine(bool $trim = false, int $minColCount = null): array {
         do {
             $l = fgetcsv($this->handle, 0, $this->delimiter, $this->enclosure, $this->escape);
             if ($l === false) {
@@ -90,7 +96,7 @@ class CsvFile {
         return $l;
     }
 
-    public function setLine($offset) {
+    public function setLine(int $offset): array {
         fseek($this->handle, 0);
         while ($offset > 0) {
             $l = fgetcsv($this->handle, 0, $this->delimiter, $this->enclosure, $this->escape);
@@ -103,14 +109,14 @@ class CsvFile {
         fclose($this->handle);
     }
 
-    private function trim(array &$l) {
+    private function trim(array &$l): void {
         foreach ($l as &$i) {
             $i = trim($i);
         }
         unset($i);
     }
 
-    private function toUtf8(array &$l) {
+    private function toUtf8(array &$l): void {
         foreach ($l as &$i) {
             $i = iconv($this->encoding, 'UTF-8', $i);
         }

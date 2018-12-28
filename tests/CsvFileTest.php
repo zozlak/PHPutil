@@ -35,17 +35,27 @@ class CsvFileTest extends \PHPUnit\Framework\TestCase {
     }
 
     protected function setUp() {
-        
+        $txt = <<<EOT
+a| b |c
+1|x|%ą|ć %
+3|y
+3|z|%c%%cc %
+EOT;
+        file_put_contents('test.csv', iconv('UTF-8', 'WINDOWS-1250', $txt));
     }
 
     public static function tearDownAfterClass() {
-        
+       unlink('test.csv');
     }
 
     /**
      */
-    public function test1() {
-        
+    public function testBasic() {
+        $csv = new CsvFile('test.csv', '|', '%', '%', 'WINDOWS-1250');
+        $csv->readHeader(true);
+        $this->assertEquals(['a', 'b', 'c'], $csv->getHeader());
+        $this->assertEquals([1, 'x', 'ą|ć '], $csv->getLine(false));
+        $this->assertEquals([3, 'z', 'c%cc'], $csv->getLine(true, 3));
     }
 
 }

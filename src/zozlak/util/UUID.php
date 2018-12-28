@@ -27,13 +27,18 @@
 namespace zozlak\util;
 
 /**
- * Description of UUID
+ * Generates UUIDs 
+ * (see https://en.wikipedia.org/wiki/Universally_unique_identifier)
  *
  * @author zozlak
  */
 class UUID {
 
-    static public function v4() {
+    /**
+     * Generates a v4 (random) UUID
+     * @return string
+     */
+    static public function v4(): string {
         $n = array();
         for ($i = 0; $i < 8; $i++) {
             $n[$i] = mt_rand(0, 0xffff);

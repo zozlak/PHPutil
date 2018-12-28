@@ -35,16 +35,16 @@ class ClassLoader {
 
     private $baseDir;
 
-    public function __construct($baseDir = 'src') {
+    public function __construct(string $baseDir = 'src') {
         $this->baseDir = (string) $baseDir;
 
         if (!is_dir($this->baseDir)) {
             throw new \RuntimeException($this->baseDir . ' is no a valid directory');
         }
-        spl_autoload_register(array($this, 'loadClass'));
+        spl_autoload_register([$this, 'loadClass']);
     }
 
-    public function loadClass($className) {
+    public function loadClass(string $className): bool {
         $path = $this->baseDir . '/' . str_replace('\\', '/', $className) . '.php';
         if (file_exists($path)) {
             require_once($path);

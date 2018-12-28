@@ -180,14 +180,10 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @covers \zozlak\util\SqlCopy::escape
      */
     public function testCopyUnusualTablesErrors() {
+        $this->expectException(\RuntimeException::class);
         $tmp = new SqlCopy('dbname=test', 'aaa');
         $tmp->insertRow(array(1, '', 'Nie'));
-        try {
-            $tmp->end();
-            throw new \Exception('Brak wyjątku');
-        } catch (\RuntimeException $e) {
-            
-        }
+        $tmp->end();
     }
 
     /**
@@ -201,6 +197,9 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
         }
         $tmp1->end();
         echo((microtime(true) - $t) . "\n");
+        
+        $tmp = self::$connection->query('SELECT count(*) FROM aaa');
+        $this->assertEquals(100000, $tmp->fetchColumn());
     }
 
     /**
@@ -237,6 +236,8 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
             $tmp1->insertRow(array($i, 'a', null));
         }
         $tmp1->end();
+        $tmp = self::$connection->query('SELECT count(*) FROM s.aaa');
+        $this->assertEquals(100, $tmp->fetchColumn());
     }
 
 }

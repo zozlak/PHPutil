@@ -29,7 +29,7 @@ namespace zozlak\util;
 /**
  * Klasa oferująca konwersję dat w różnych formatach na postać RRRR-MM-DD
  * Obsługiwane formaty:
- * - R-M-D (gdy RR większy od 31)
+ * - R-M-D (gdy R większy od 31)
  * - D-M-R (przyjmowany, gdy pierwszy numer <= 31)
  * - liczba sekund od 1582-10-14 (początek ery wg R konwertującego daty ze zbiorów danych SPSS)
  * - liczba sekund od 1970-01-01 (początek ery wg PHP, Unix-ów, itp.)
@@ -39,7 +39,7 @@ class Date {
 
     static $spssBase = 12219379200; // różnica pomiędzy 1970-01-01, a 1582-10-14, czyli pomiędzy początkiem świata wg UNIX-a i wg R-a (przy wczytywaniu dat z SPSS-a)
 
-    static public function getDate($date, $spss = true) {
+    static public function getDate(string $date, bool $spss = true): ?string {
         $date = trim($date);
         if ($date == '') {
             return null;
@@ -62,15 +62,15 @@ class Date {
         $month = intval($date[1]);
         if ($date[0] < 32) {
             $year = intval($date[2]);
-            $day = intval($date[0]);
+            $day  = intval($date[0]);
         } else {
             $year = intval($date[0]);
-            $day = intval($date[2]);
+            $day  = intval($date[2]);
         }
         if ($year < 100) {
-            $tmp = date('Y');
+            $tmp      = date('Y');
             $treshold = $tmp % 100;
-            $tmp = intval($tmp / 100) * 100;
+            $tmp      = intval($tmp / 100) * 100;
             if ($year > $treshold) {
                 $year -= 100;
             }

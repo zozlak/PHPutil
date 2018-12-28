@@ -31,11 +31,12 @@ namespace zozlak\util;
  */
 class HtmlWidgets {
 
-    public static function e($s) {
+    public static function e($s): string {
         return htmlspecialchars($s);
     }
 
-    public static function input($type, $name, $value, $class = "", $attr = array()) {
+    public static function input(string $type, string $name, string $value,
+                                 string $class = "", array $attr = []): void {
         $a = '';
         foreach ($attr as $h => $i) {
             $a .= ' ' . $h . '="' . self::e($i) . '"';
@@ -45,22 +46,28 @@ class HtmlWidgets {
         );
     }
 
-    public static function textarea($name, $value, $class = "", $rows = 2, $cols = 40) {
+    public static function textarea(string $name, string $value,
+                                    string $class = "", int $rows = 2,
+                                    int $cols = 40): void {
         printf(
             '<textarea name="%s" rows="%d" cols="%d" class="%s">%s</textarea>', self::e($name), intval($rows), intval($cols), self::e($class), self::e($value)
         );
     }
 
-    public static function checkbox($name, $value, $label = "", $class = "", $onclick = "") {
+    public static function checkbox(string $name, string $value,
+                                    string $label = "", string $class = "",
+                                    string $onclick = ""): void {
         printf(
             '<label><input type="checkbox" name="%s" %s class="%s" onclick="%s"/>%s</label>', self::e($name), $value ? 'checked="checked"' : '', self::e($class), self::e($onclick), $label
         );
     }
 
-    public static function select($name, $value, array $opts, $type, $class = "", $onchange = "") {
+    public static function select(string $name, string $value, array $opts,
+                                  string $type, string $class = "",
+                                  string $onchange = ""): void {
         $multi = is_array($value);
         if (!$multi) {
-            $value = array($value);
+            $value = [$value];
         }
         $o = '';
         foreach ($opts as $h => $i) {
@@ -74,7 +81,9 @@ class HtmlWidgets {
         );
     }
 
-    public static function radio($name, $value, array $opts, $type, $class = "", $onclick = "", $br = true) {
+    public static function radio(string $name, string $value, array $opts,
+                                 string $type, string $class = "",
+                                 string $onclick = "", bool $br = true): void {
         $o = '';
         foreach ($opts as $h => $i) {
             $w = $type == 'pary' ? $h : $i;
@@ -85,13 +94,15 @@ class HtmlWidgets {
         printf($o);
     }
 
-    public static function button($value, $onclick, $class = "") {
+    public static function button(string $value, string $onclick,
+                                  string $class = ""): void {
         printf(
             '<button type="button" onclick="%s" class="%s">%s</button>', self::e($onclick), self::e($class), $value
         );
     }
 
-    public static function submit($name, $value, $onclick = "", $class = "") {
+    public static function submit(string $name, string $value,
+                                  string $onclick = "", string $class = ""): void {
         printf(
             '<button type="submit" name="%s" onclick="%s" class="%s">%s</button>', self::e($name), self::e($onclick), self::e($class), $value
         );

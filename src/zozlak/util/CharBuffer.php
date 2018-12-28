@@ -26,6 +26,8 @@
 
 namespace zozlak\util;
 
+use OutOfRangeException;
+
 /**
  * PHP ma to do siebie, że im dłuższy string, tym dłużej wykonywane są na nim operacje,
  * przy czym szybkość zależy też od pozycji w stringu (im bliżej początku stringu, tym szybciej).
@@ -61,27 +63,31 @@ class CharBuffer {
         $this->length = mb_strlen($this->buffer);
     }
 
-    public function getString($pos, $count = 1) {
+    public function getString(int $pos, int $count = 1): string {
         if ($pos >= $this->length) {
-            throw new Exception('Position out of string');
+            throw new OutOfRangeException('Position out of string');
         } else if ($pos < $this->offset) {
-            throw new Exception('Position out of string');
+            throw new OutOfRangeException('Position out of string');
         }
         return mb_substr($this->buffer, $pos - $this->offset, $count);
     }
 
     /**
-     * Skracamy tylko na wyraźne życzenie, bo klasa nie wie sama z siebie,
-     * kiedy już przetworzona część stringu faktycznie przestaje być potrzebna
+     * Cuts off unneeded part of a string (`getString()` indexing remains 
+     * unchanged).
+     * @param int $pos cutting position
+     * @param int $minDiff minimum difference from the last cut for the cut to 
+     *   be performed (cutting to frequent degrades performance)
+     * @return void
      */
-    public function cut($pos, $minDiff = 1000) {
+    public function cut(int $pos, int $minDiff = 1000): void {
         if ($pos >= $this->offset + $minDiff) {
             $this->buffer = mb_substr($this->buffer, $pos - $this->offset);
             $this->offset = $pos;
         }
     }
 
-    public function getLength() {
+    public function getLength(): int {
         return $this->length;
     }
 

@@ -42,10 +42,23 @@ class CharBufferTest extends \PHPUnit\Framework\TestCase {
         
     }
 
-    /**
-     */
-    public function test1() {
-        
+    public function testBasic() {
+        $buf = new CharBuffer(str_repeat('a', 10000) . str_repeat('b', 10000));
+        $this->assertEquals('a', $buf->getString(0));
+        $this->assertEquals('ab', $buf->getString(9999, 2));
     }
 
+    public function testCut() {
+        $buf = new CharBuffer(str_repeat('a', 10000) . str_repeat('b', 10000));
+        $buf->cut(9999);
+        $this->assertEquals('ab', $buf->getString(9999, 2));
+    }
+    
+    public function testException() {
+        $this->expectException(\OutOfRangeException::class);
+        $buf = new CharBuffer(str_repeat('a', 10000) . str_repeat('b', 10000));
+        $buf->cut(9999);
+        $buf->getString(9998);
+    }
+    
 }
