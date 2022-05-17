@@ -30,14 +30,11 @@ use zozlak\util\SqlCopy;
 
 class SqlCopyTest extends \PHPUnit\Framework\TestCase {
 
+    static private $connStr = "host=127.0.0.1 port=5432 user=postgres password=CmPUpKTW2e";
     static private $connection;
 
     static public function setUpBeforeClass() {
-        exec('
-			dropdb test;
-			createdb test;
-		');
-        self::$connection = new \PDO('pgsql:dbname=test');
+        self::$connection = new \PDO("pgsql: " . self::$connStr);
         self::$connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
@@ -58,9 +55,9 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @covers \zozlak\util\SqlCopy::__construct
      */
     public function testConstruct() {
-        $tmp = new SqlCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy(self::$connStr, 'aaa');
         $tmp->end();
-        $tmp = new SqlCopy('user=zozlak dbname=bazaKtoraNieIstnieje', 'aaa');
+        $tmp = new SqlCopy(self::$connStr . " dbname=bazaKtoraNieIstnieje", 'aaa');
     }
 
     /**
@@ -69,7 +66,7 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @covers \zozlak\util\SQLCopy::insertRow
      */
     public function testEnd() {
-        $tmp = new SqlCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy(self::$connStr, 'aaa');
         $tmp->end();
         $tmp->insertRow("1\t\N\t\N\n");
     }
@@ -78,7 +75,7 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @covers \zozlak\util\SqlCopy::insertRow
      */
     public function testCopyStrings() {
-        $tmp = new SqlCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy(self::$connStr, 'aaa');
 
         for ($i = 0; $i < 100; $i++) {
             $tmp->insertRow($i . "\t\N\t\N\n");
@@ -111,7 +108,7 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @covers \zozlak\util\SqlCopy::escape
      */
     public function testCopyTables() {
-        $tmp = new SqlCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy(self::$connStr, 'aaa');
 
         for ($i = 0; $i < 100; $i++) {
             $tmp->insertRow(array($i, null, null));
@@ -144,7 +141,8 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @covers \zozlak\util\SqlCopy::escape
      */
     public function testCopyUnusualTables() {
-        $tmp = new SqlCopy('dbname=test', 'aaa', array('null' => array('', 'NA'), 'true' => array('T', 'true')));
+        $tmp = new SqlCopy(self::$connStr, 'aaa', array('null' => array('', 'NA'),
+            'true' => array('T', 'true')));
 
         for ($i = 0; $i < 100; $i++) {
             $tmp->insertRow(array($i, 'NA', null));
@@ -181,7 +179,7 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      */
     public function testCopyUnusualTablesErrors() {
         $this->expectException(\RuntimeException::class);
-        $tmp = new SqlCopy('dbname=test', 'aaa');
+        $tmp = new SqlCopy(self::$connStr, 'aaa');
         $tmp->insertRow(array(1, '', 'Nie'));
         $tmp->end();
     }
@@ -190,14 +188,14 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @depends testCopyTables
      */
     public function testSpeed() {
-        $t = microtime(true);
-        $tmp1 = new SqlCopy('dbname=test', 'aaa');
+        $t    = microtime(true);
+        $tmp1 = new SqlCopy(self::$connStr, 'aaa');
         for ($i = 0; $i < 100000; $i++) {
             $tmp1->insertRow(array($i, 'a', null));
         }
         $tmp1->end();
         echo((microtime(true) - $t) . "\n");
-        
+
         $tmp = self::$connection->query('SELECT count(*) FROM aaa');
         $this->assertEquals(100000, $tmp->fetchColumn());
     }
@@ -206,8 +204,8 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @depends testCopyTables
      */
     public function testParallelCopy() {
-        $tmp1 = new SqlCopy('dbname=test', 'aaa');
-        $tmp2 = new SqlCopy('dbname=test', 'bbb'); // tablica z kluczem obcym do aaa
+        $tmp1 = new SqlCopy(self::$connStr, 'aaa');
+        $tmp2 = new SqlCopy(self::$connStr, 'bbb'); // tablica z kluczem obcym do aaa
 
         for ($i = 0; $i < 100; $i++) {
             $tmp1->insertRow(array($i, 'a', null));
@@ -231,7 +229,7 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
     public function testCopyInSchema() {
         self::$connection->exec("CREATE SCHEMA s");
         self::$connection->exec("CREATE TABLE s.aaa (a int primary key, b text, c bool)");
-        $tmp1 = new SqlCopy('dbname=test', 'aaa', array(), 's');
+        $tmp1 = new SqlCopy(self::$connStr, 'aaa', array(), 's');
         for ($i = 0; $i < 100; $i++) {
             $tmp1->insertRow(array($i, 'a', null));
         }
@@ -239,5 +237,4 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
         $tmp = self::$connection->query('SELECT count(*) FROM s.aaa');
         $this->assertEquals(100, $tmp->fetchColumn());
     }
-
 }

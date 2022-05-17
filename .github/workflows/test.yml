@@ -1,0 +1,34 @@
+name: phpunit
+
+on: push
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: CmPUpKTW2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+        - 5432:5432
+    steps:
+    - uses: actions/checkout@v2
+    - name: composer update
+      run: |
+        composer update
+    - name: test
+      run: |
+        XDEBUG_MODE=coverage vendor/bin/phpunit
+    - name: coveralls
+      run: |
+        export COVERALLS_RUN_LOCALLY=1
+        export COVERALLS_REPO_TOKEN=${{ secrets.coverallsToken }}
+        composer require -W php-coveralls/php-coveralls
+        php vendor/bin/php-coveralls -v
+
