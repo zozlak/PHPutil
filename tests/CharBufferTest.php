@@ -30,15 +30,15 @@ use zozlak\util\CharBuffer;
 
 class CharBufferTest extends \PHPUnit\Framework\TestCase {
 
-    static public function setUpBeforeClass() {
+    static public function setUpBeforeClass(): void {
         
     }
 
-    protected function setUp() {
+    protected function setUp(): void {
         
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
         
     }
 

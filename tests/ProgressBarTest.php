@@ -30,7 +30,7 @@ use zozlak\util\ProgressBar;
 
 class ProgressBarTest extends \PHPUnit\Framework\TestCase {
 
-    protected function setUp() {
+    protected function setUp(): void {
         
     }
 

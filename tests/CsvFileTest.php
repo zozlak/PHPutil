@@ -30,11 +30,11 @@ use zozlak\util\CsvFile;
 
 class CsvFileTest extends \PHPUnit\Framework\TestCase {
 
-    static public function setUpBeforeClass() {
+    static public function setUpBeforeClass(): void {
         
     }
 
-    protected function setUp() {
+    protected function setUp(): void {
         $txt = <<<EOT
 a| b |c
 1|x|%ą|ć %
@@ -44,7 +44,7 @@ EOT;
         file_put_contents('test.csv', iconv('UTF-8', 'WINDOWS-1250', $txt));
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
        unlink('test.csv');
     }
 

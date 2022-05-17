@@ -33,41 +33,41 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
     static private $connStr = "host=127.0.0.1 port=5432 user=postgres password=CmPUpKTW2e";
     static private $connection;
 
-    static public function setUpBeforeClass() {
+    static public function setUpBeforeClass(): void {
         self::$connection = new \PDO("pgsql: " . self::$connStr);
         self::$connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
-    protected function setUp() {
+    protected function setUp(): void {
         self::$connection->exec("DROP TABLE IF EXISTS bbb");
         self::$connection->exec("DROP TABLE IF EXISTS aaa");
         self::$connection->exec("CREATE TABLE aaa (a int primary key, b text, c bool)");
         self::$connection->exec("CREATE TABLE bbb (a int references aaa(a), b text, c bool, primary key(a, b))");
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
         self::$connection = null;
-        exec('dropdb test');
     }
 
     /**
-     * @expectedException \RuntimeException
      * @covers \zozlak\util\SqlCopy::__construct
      */
     public function testConstruct() {
         $tmp = new SqlCopy(self::$connStr, 'aaa');
         $tmp->end();
+        
+        $this->expectException(\RuntimeException::class);
         $tmp = new SqlCopy(self::$connStr . " dbname=bazaKtoraNieIstnieje", 'aaa');
     }
 
     /**
-     * @expectedException \RuntimeException
      * @covers \zozlak\util\SqlCopy::end
      * @covers \zozlak\util\SQLCopy::insertRow
      */
     public function testEnd() {
         $tmp = new SqlCopy(self::$connStr, 'aaa');
         $tmp->end();
+        $this->expectException(\RuntimeException::class);
         $tmp->insertRow("1\t\N\t\N\n");
     }
 
@@ -227,7 +227,8 @@ class SqlCopyTest extends \PHPUnit\Framework\TestCase {
      * @depends testCopyTables
      */
     public function testCopyInSchema() {
-        self::$connection->exec("CREATE SCHEMA s");
+        self::$connection->exec("CREATE SCHEMA IF NOT EXISTS s");
+        self::$connection->exec("DROP TABLE IF EXISTS s.aaa");
         self::$connection->exec("CREATE TABLE s.aaa (a int primary key, b text, c bool)");
         $tmp1 = new SqlCopy(self::$connStr, 'aaa', array(), 's');
         for ($i = 0; $i < 100; $i++) {
