@@ -87,7 +87,7 @@ class Config implements Iterator {
         return key($this->config);
     }
 
-    public function next(): mixed {
+    public function next(): void {
         next($this->config);
     }
 
