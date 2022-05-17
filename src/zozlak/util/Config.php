@@ -79,23 +79,23 @@ class Config implements Iterator {
         $this->config = $config;
     }
 
-    public function current() {
+    public function current(): mixed {
         return current($this->config);
     }
 
-    public function key() {
+    public function key(): mixed {
         return key($this->config);
     }
 
-    public function next() {
+    public function next(): mixed {
         next($this->config);
     }
 
-    public function rewind() {
+    public function rewind(): void {
         reset($this->config);
     }
 
-    public function valid() {
+    public function valid(): bool {
         return key($this->config) !== null;
     }
 
