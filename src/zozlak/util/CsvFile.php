@@ -80,7 +80,7 @@ class CsvFile {
         $this->header = $header;
     }
 
-    public function getLine(bool $trim = false, int $minColCount = null): array {
+    public function getLine(bool $trim = false, int $minColCount = null): array | false {
         do {
             $l = fgetcsv($this->handle, 0, $this->delimiter, $this->enclosure, $this->escape);
             if ($l === false) {
