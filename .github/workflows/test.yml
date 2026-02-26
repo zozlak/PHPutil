@@ -17,18 +17,24 @@ jobs:
           --health-retries 5
         ports:
         - 5432:5432
+    strategy:
+      matrix:
+        php: [8.1, 8.2, 8.3, 8.4, 8.5]
     steps:
-    - uses: actions/checkout@v4
-    - name: composer update
-      run: |
-        composer update
-    - name: test
-      run: |
-        XDEBUG_MODE=coverage vendor/bin/phpunit
+    - uses: actions/checkout@v6
+    - name: composer
+      run: composer update
+    #- name: phpstan
+    #  run: vendor/bin/phpstan analyze -l 8 src tests
+    - name: phpunit
+      run: XDEBUG_MODE=coverage vendor/bin/phpunit
     - name: coveralls
+      if: ${{ matrix.php == 8.5 }}
+      run: |
       run: |
         export COVERALLS_RUN_LOCALLY=1
         export COVERALLS_REPO_TOKEN=${{ secrets.coverallsToken }}
-        composer require -W php-coveralls/php-coveralls
+        rm -fR composer.json composer.lock vendor
+        composer require php-coveralls/php-coveralls
         php vendor/bin/php-coveralls -v
 
