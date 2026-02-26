@@ -31,7 +31,6 @@ jobs:
     - name: coveralls
       if: ${{ matrix.php == 8.5 }}
       run: |
-      run: |
         export COVERALLS_RUN_LOCALLY=1
         export COVERALLS_REPO_TOKEN=${{ secrets.coverallsToken }}
         rm -fR composer.json composer.lock vendor
